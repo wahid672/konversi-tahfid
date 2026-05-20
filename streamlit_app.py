@@ -59,10 +59,10 @@ def extract_nilai(rincian_str):
     return None
 
 # --- TAMPILAN WEB STREAMLIT ---
-st.set_page_config(page_title="Konversi Laporan Tahfidz", layout="centered")
+st.set_page_config(page_title="Konversi Laporan Tahfidz PPTQ DAMUS", layout="centered")
 
 st.title("Aplikasi Konversi Laporan Tahfidz")
-st.write("Upload file **Excel (.xlsx)** laporan dari sistem, dan unduh versi Excel yang sudah dirapikan.")
+st.write("Upload file **Excel (.xlsx)** laporan tahfidz dari siakad pptqdamus.com, dan unduh versi Excel yang sudah dirapikan.")
 
 # UBAH TIPE FILE MENJADI XLSX
 uploaded_file = st.file_uploader("Pilih file Excel Laporan", type=["xlsx"])
