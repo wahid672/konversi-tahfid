@@ -7,7 +7,13 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-# Fungsi Konversi Waktu
+# Kamus singkatan bulan dalam Bahasa Indonesia agar kebal dari pengaturan bahasa (locale) di VPS
+BULAN_INDO = {
+    1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'Mei', 6: 'Jun',
+    7: 'Jul', 8: 'Ags', 9: 'Sep', 10: 'Okt', 11: 'Nov', 12: 'Des'
+}
+
+# Fungsi Konversi Waktu Hijriah ke Masehi
 def hijri_to_gregorian(y, m, d):
     jd = int((11 * y + 3) / 30) + 354 * y + 30 * m - int((m - 1) / 2) + d + 1948440 - 385
     if jd > 2299160:
@@ -41,10 +47,16 @@ def convert_waktu(waktu_str):
             date_time = parts[1].strip()
             dt_parts = date_time.split(' ')
             date_str = dt_parts[0]
-            time_str = dt_parts[1] if len(dt_parts) > 1 else ""
+            
             d, m, y = map(int, date_str.split('/'))
             greg_date = hijri_to_gregorian(y, m, d)
-            return f"{greg_date.strftime('%d/%m/%Y')} {time_str}".strip()
+            
+            # Format baru: DD -Bulan-YY (contoh: 29 -Apr-26)
+            hari = f"{greg_date.day:02d}"
+            bulan = BULAN_INDO[greg_date.month]
+            tahun = str(greg_date.year)[-2:] # Mengambil 2 digit terakhir dari tahun
+            
+            return f"{hari} -{bulan}-{tahun}"
     except Exception:
         pass
     return waktu_str
@@ -59,18 +71,16 @@ def extract_nilai(rincian_str):
     return None
 
 # --- TAMPILAN WEB STREAMLIT ---
-st.set_page_config(page_title="Konversi Laporan Tahfidz PPTQ DAMUS", layout="centered")
+st.set_page_config(page_title="Konversi Laporan Tahfidz", layout="centered")
 
 st.title("Aplikasi Konversi Laporan Tahfidz")
-st.write("Upload file **Excel (.xlsx)** laporan tahfidz dari siakad pptqdamus.com, dan unduh versi Excel yang sudah dirapikan.")
+st.write("Upload file **Excel (.xlsx)** laporan dari sistem, dan unduh versi Excel yang sudah dirapikan.")
 
-# UBAH TIPE FILE MENJADI XLSX
 uploaded_file = st.file_uploader("Pilih file Excel Laporan", type=["xlsx"])
 
 if uploaded_file is not None:
     st.info("Memproses data...")
     try:
-        # MENGGUNAKAN pd.read_excel BUKAN pd.read_csv
         df = pd.read_excel(uploaded_file, skiprows=6)
         
         df['WAKTU_MASEHI'] = df['WAKTU'].apply(convert_waktu)
@@ -131,6 +141,7 @@ if uploaded_file is not None:
             if col_name == 'NO': ws.column_dimensions[col_letter].width = 6
             elif col_name == 'NILAI': ws.column_dimensions[col_letter].width = 10
             elif col_name == 'RINCIAN LAPORAN': ws.column_dimensions[col_letter].width = 45
+            elif col_name == 'WAKTU (MASEHI)': ws.column_dimensions[col_letter].width = 15 # Lebar disesuaikan karena jam dihapus
             elif col_name and 'WAKTU' in col_name: ws.column_dimensions[col_letter].width = 25
             else: ws.column_dimensions[col_letter].width = 35
 
@@ -150,7 +161,6 @@ if uploaded_file is not None:
 
         st.success("Konversi Excel berhasil!")
         
-        # Tombol Download
         st.download_button(
             label="⬇️ Download File Excel Hasil (.xlsx)",
             data=output,
@@ -158,7 +168,6 @@ if uploaded_file is not None:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
         
-        # Tampilkan sedikit preview data di web
         st.write("Preview Data:")
         st.dataframe(df.head())
 
