@@ -7,12 +7,6 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-# Kamus singkatan bulan dalam Bahasa Indonesia agar kebal dari pengaturan bahasa (locale) di VPS
-BULAN_INDO = {
-    1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'Mei', 6: 'Jun',
-    7: 'Jul', 8: 'Ags', 9: 'Sep', 10: 'Okt', 11: 'Nov', 12: 'Des'
-}
-
 # Fungsi Konversi Waktu Hijriah ke Masehi
 def hijri_to_gregorian(y, m, d):
     jd = int((11 * y + 3) / 30) + 354 * y + 30 * m - int((m - 1) / 2) + d + 1948440 - 385
@@ -51,12 +45,8 @@ def convert_waktu(waktu_str):
             d, m, y = map(int, date_str.split('/'))
             greg_date = hijri_to_gregorian(y, m, d)
             
-            # Format baru: DD -Bulan-YY (contoh: 29 -Apr-26)
-            hari = f"{greg_date.day:02d}"
-            bulan = BULAN_INDO[greg_date.month]
-            tahun = str(greg_date.year)[-2:] # Mengambil 2 digit terakhir dari tahun
-            
-            return f"{hari} -{bulan}-{tahun}"
+            # Format baru: DD/MM/YY (contoh: 29/04/26)
+            return greg_date.strftime("%d/%m/%y")
     except Exception:
         pass
     return waktu_str
